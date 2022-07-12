@@ -1,34 +1,64 @@
 const fs = require('fs');
 
+function print(arg) {
+	process.stdout.write(arg);
+}
+
 function PWD() {
 	process.stdout.write(process.cwd());
 }
 
 function DATE() {
-	process.stdout.write(Date());
+	print(Date());
 }
 
 function LIST() {
 	fs.readdir('.', function (err, files) {
 		if (err) throw err;
 		files.forEach(function (file) {
-			process.stdout.write(file.toString() + '\n');
+			print(file.toString() + '\n');
 		});
-		process.stdout.write('prompt > ');
+		print('prompt > ');
 	});
 }
 
 function ECHO(param) {
-	process.stdout.write(param);
+	print(param);
 }
 
 function CAT(param) {
-	fs.readFile(param, 'utf8', function (err, data) {
+	fs.readFile(param[0], 'utf8', function (err, data) {
 		if (err) throw err;
 
-		process.stdout.write(data);
+		print(data);
 	});
-	process.stdout.write('prompt > ' + '\n');
+	print('prompt > ' + '\n');
+}
+
+function HEAD(param) {
+	fs.readFile(param[0], 'utf8', function (err, data) {
+		if (err) throw err;
+
+		print('\n' + data.split('\n').slice(0, 10).join('\n'));
+	});
+	print('prompt > ' + '\n');
+}
+
+function TAIL(param) {
+	fs.readFile(param[0], 'utf8', function (err, data) {
+		if (err) throw err;
+
+		print('\n' + data.split('\n').slice(-10).join('\n'));
+	});
+	print('prompt > ' + '\n');
+}
+
+function CURL(param) {
+	request(param[0], (err, res, body) => {
+		if (err) throw err;
+
+		print(body);
+	});
 }
 
 module.exports = {
@@ -37,4 +67,7 @@ module.exports = {
 	ls: LIST,
 	echo: ECHO,
 	cat: CAT,
+	head: HEAD,
+	tail: TAIL,
+	curl: CURL,
 };
