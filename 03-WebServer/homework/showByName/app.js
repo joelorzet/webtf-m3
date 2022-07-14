@@ -2,6 +2,7 @@ var fs = require('fs');
 var http = require('http');
 
 // Escribí acá tu servidor
+const port = 3001;
 
 http
 	.createServer((req, res) => {
@@ -15,4 +16,4 @@ http
 			}
 		});
 	})
-	.listen(3001, 'localhost');
+	.listen(port, 'localhost', () => console.log(`Listening on port ${port}`));

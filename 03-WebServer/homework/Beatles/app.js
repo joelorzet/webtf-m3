@@ -1,6 +1,7 @@
 var http = require('http');
 var fs = require('fs');
 
+const port = 3001;
 var beatles = [
 	{
 		name: 'John Lennon',
@@ -50,5 +51,22 @@ http
 			const index = fs.readFileSync(`${__dirname}/index.html`);
 			res.end(index);
 		}
+
+		if (req.url[0] === '/' && req.url.length > 1) {
+			let urlBeatle = req.url.split('/').pop();
+			urlBeatle = urlBeatle.replace('%20', ' ');
+			const foundBeatle = beatles.find((e) => e.name === urlBeatle);
+
+			if (foundBeatle) {
+				res.writeHead(200, { 'Content-Type': 'text/html' });
+				let template = fs.readFileSync(`${__dirname}/beatle.html`, 'utf-8');
+
+				template = template.replace(/{name}/g, foundBeatle.name);
+				template = template.replace('{birthdate}', foundBeatle.birthdate);
+				template = template.replace('{profilePic}', foundBeatle.profilePic);
+
+				res.end(template);
+			}
+		}
 	})
-	.listen(3001, 'localhost');
+	.listen(port, 'localhost', () => console.log(`Esuchando en el puerto ${port}`));
