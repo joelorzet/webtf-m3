@@ -39,18 +39,25 @@ class $Promise {
 	}
 
 	then(successCb, errorCb) {
-		if (typeof successCb !== 'function') {
-			successCb = false;
-		}
-		if (typeof errorCb !== 'function') {
-			errorCb = false;
-		}
+		if (typeof successCb !== 'function') successCb = false;
 
-		this._handlerGroups.push({ successCb, errorCb });
+		if (typeof errorCb !== 'function') errorCb = false;
+
+		const downstreamPromise = new $Promise(() => {});
+
+		const handler = {
+			successCb,
+			errorCb,
+			downstreamPromise,
+		};
+
+		this._handlerGroups.push(handler);
 
 		if (this._state !== 'pending') {
 			this._callHandlers();
 		}
+
+		return downstreamPromise;
 	}
 
 	catch(errorCb) {
@@ -58,7 +65,7 @@ class $Promise {
 			errorCb = false;
 		}
 
-		this.then(null, errorCb);
+		return this.then(null, errorCb);
 	}
 
 	_callHandlers() {
@@ -66,9 +73,43 @@ class $Promise {
 			const currentHandler = this._handlerGroups.shift();
 
 			if (this._state === 'fulfilled') {
+				if (!currentHandler.successCb) {
+					currentHandler.downstreamPromise._internalResolve(this._value);
+				} else {
+					try {
+						const result = currentHandler.successCb(this._value);
+
+						if (result instanceof $Promise) {
+							result.then(
+								(val) => currentHandler.downstreamPromise._internalResolve(val),
+								(err) => currentHandler.downstreamPromise._internalReject(err)
+							);
+						} else {
+							currentHandler.downstreamPromise._internalResolve(result);
+						}
+					} catch (e) {
+						currentHandler.downstreamPromise._internalReject(e);
+					}
+				}
 				currentHandler.successCb && currentHandler.successCb(this._value);
 			} else if (this._state === 'rejected') {
-				currentHandler.errorCb && currentHandler.errorCb(this._value);
+				if (!currentHandler.errorCb) {
+					currentHandler.downstreamPromise._internalReject(this._value);
+				} else {
+					try {
+						const result = currentHandler.errorCb(this._value);
+						if (result instanceof $Promise) {
+							result.then(
+								(val) => currentHandler.downstreamPromise._internalResolve(val),
+								(err) => currentHandler.downstreamPromise._internalReject(err)
+							);
+						} else {
+							currentHandler.downstreamPromise._internalResolve(result);
+						}
+					} catch (e) {
+						currentHandler.downstreamPromise._internalReject(e);
+					}
+				}
 			}
 		}
 	}
