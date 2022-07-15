@@ -10,6 +10,7 @@ class $Promise {
 
 		this._state = 'pending';
 		this._value;
+		this._handlerGroups = [];
 
 		executor(
 			(val) => this._internalResolve(val),
@@ -32,6 +33,34 @@ class $Promise {
 				this._value = data;
 			}
 			this._state = 'fulfilled';
+			this._callHandlers();
+		}
+	}
+
+	then(successCb, errorCb) {
+		if (typeof successCb !== 'function') {
+			successCb = false;
+		}
+		if (typeof errorCb !== 'function') {
+			errorCb = false;
+		}
+
+		this._handlerGroups.push({ successCb, errorCb });
+
+		if (this._state !== 'pending') {
+			this._callHandlers();
+		}
+	}
+
+	_callHandlers() {
+		while (this._handlerGroups.length) {
+			const currentHandler = this._handlerGroups.shift();
+
+			if (this._state === 'fulfilled') {
+				currentHandler.successCb && currentHandler.successCb(this._value);
+			} else {
+				currentHandler.errorCb && currentHandler.errorCb(this._value);
+			}
 		}
 	}
 }
