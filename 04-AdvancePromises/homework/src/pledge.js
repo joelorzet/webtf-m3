@@ -24,6 +24,7 @@ class $Promise {
 				this._value = err;
 			}
 			this._state = 'rejected';
+			this._callHandlers();
 		}
 	}
 
@@ -52,13 +53,21 @@ class $Promise {
 		}
 	}
 
+	catch(errorCb) {
+		if (typeof errorCb !== 'function') {
+			errorCb = false;
+		}
+
+		this.then(null, errorCb);
+	}
+
 	_callHandlers() {
 		while (this._handlerGroups.length) {
 			const currentHandler = this._handlerGroups.shift();
 
 			if (this._state === 'fulfilled') {
 				currentHandler.successCb && currentHandler.successCb(this._value);
-			} else {
+			} else if (this._state === 'rejected') {
 				currentHandler.errorCb && currentHandler.errorCb(this._value);
 			}
 		}
