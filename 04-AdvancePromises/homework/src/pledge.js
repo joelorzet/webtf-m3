@@ -4,11 +4,15 @@ Promises Workshop: construye la libreria de ES6 promises, pledge.js
 ----------------------------------------------------------------*/
 // // TU CÓDIGO AQUÍ:
 
+const FULFILLED = 'fulfilled';
+const PENDING = 'pending';
+const REJECTED = 'rejected';
+
 class $Promise {
 	constructor(executor) {
 		if (typeof executor !== 'function') throw new TypeError('executor needs to be a function');
 
-		this._state = 'pending';
+		this._state = PENDING;
 		this._value;
 		this._handlerGroups = [];
 
@@ -19,29 +23,28 @@ class $Promise {
 	}
 
 	_internalReject(err) {
-		if (this._state === 'pending' && this._state !== 'fulfilled') {
-			if (this._state === 'pending') {
-				this._value = err;
-			}
-			this._state = 'rejected';
+		if (this._state === PENDING) {
+			this._value = err;
+			this._state = REJECTED;
 			this._callHandlers();
 		}
 	}
 
 	_internalResolve(data) {
-		if (this._state === 'pending' && this._state !== 'rejected') {
-			if (this._state === 'pending') {
-				this._value = data;
-			}
-			this._state = 'fulfilled';
+		if (this._state === PENDING) {
+			this._value = data;
+			this._state = FULFILLED;
 			this._callHandlers();
 		}
 	}
 
 	then(successCb, errorCb) {
-		if (typeof successCb !== 'function') successCb = false;
-
-		if (typeof errorCb !== 'function') errorCb = false;
+		if (typeof successCb !== 'function') {
+			successCb = false;
+		}
+		if (typeof errorCb !== 'function') {
+			errorCb = false;
+		}
 
 		const downstreamPromise = new $Promise(() => {});
 
@@ -53,7 +56,7 @@ class $Promise {
 
 		this._handlerGroups.push(handler);
 
-		if (this._state !== 'pending') {
+		if (this._state !== PENDING) {
 			this._callHandlers();
 		}
 
@@ -61,53 +64,49 @@ class $Promise {
 	}
 
 	catch(errorCb) {
-		if (typeof errorCb !== 'function') {
-			errorCb = false;
-		}
-
 		return this.then(null, errorCb);
 	}
 
 	_callHandlers() {
 		while (this._handlerGroups.length) {
-			const currentHandler = this._handlerGroups.shift();
+			const cb = this._handlerGroups.shift();
 
+			// FULFILLED
 			if (this._state === 'fulfilled') {
-				if (!currentHandler.successCb) {
-					currentHandler.downstreamPromise._internalResolve(this._value);
+				if (!cb.successCb) {
+					cb.downstreamPromise._internalResolve(this._value);
 				} else {
 					try {
-						const result = currentHandler.successCb(this._value);
+						const result = cb.successCb(this._value);
 
 						if (result instanceof $Promise) {
 							result.then(
-								(val) => currentHandler.downstreamPromise._internalResolve(val),
-								(err) => currentHandler.downstreamPromise._internalReject(err)
+								(value) => cb.downstreamPromise._internalResolve(value),
+								(err) => cb.downstreamPromise._internalReject(err)
 							);
 						} else {
-							currentHandler.downstreamPromise._internalResolve(result);
+							cb.downstreamPromise._internalResolve(this._value);
 						}
 					} catch (e) {
-						currentHandler.downstreamPromise._internalReject(e);
+						cb.downstreamPromise._internalReject(e);
 					}
 				}
-				currentHandler.successCb && currentHandler.successCb(this._value);
 			} else if (this._state === 'rejected') {
-				if (!currentHandler.errorCb) {
-					currentHandler.downstreamPromise._internalReject(this._value);
+				if (!cb.errorCb) {
+					cb.downstreamPromise._internalReject(this._value);
 				} else {
 					try {
-						const result = currentHandler.errorCb(this._value);
+						const result = cb.errorCb(this._value);
 						if (result instanceof $Promise) {
 							result.then(
-								(val) => currentHandler.downstreamPromise._internalResolve(val),
-								(err) => currentHandler.downstreamPromise._internalReject(err)
+								(value) => cb.downstreamPromise._internalResolve(value),
+								(err) => cb.downstreamPromise._internalReject(err)
 							);
 						} else {
-							currentHandler.downstreamPromise._internalResolve(result);
+							cb.downstreamPromise._internalResolve(this._value);
 						}
 					} catch (e) {
-						currentHandler.downstreamPromise._internalReject(e);
+						cb.downstreamPromise._internalReject(e);
 					}
 				}
 			}
