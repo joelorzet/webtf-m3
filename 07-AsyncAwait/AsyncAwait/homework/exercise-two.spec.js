@@ -13,20 +13,20 @@ var magenta = customSpies.magenta;
 var fs = require('fs');
 var exercise = require('./exercise-two');
 var dirpath = path.join(__dirname, 'poem-two');
-var stanzas = fs.readdirSync(dirpath)
-.filter(function (filename) {
-	return filename[0] !== '.'
-})
-.map(function (filename) {
-	return fs.readFileSync(path.join(dirpath, filename)).toString();
-});
+var stanzas = fs
+	.readdirSync(dirpath)
+	.filter(function (filename) {
+		return filename[0] !== '.';
+	})
+	.map(function (filename) {
+		return fs.readFileSync(path.join(dirpath, filename)).toString();
+	});
 
 function resetCalls(spy) {
 	spy.__spy.calls = [];
 }
 
 describe('exercise two (involving poem two)', function () {
-
 	beforeEach(function () {
 		resetCalls(blue);
 		resetCalls(magenta);
@@ -45,14 +45,14 @@ describe('exercise two (involving poem two)', function () {
 			console.log.calls.push({
 				args: args,
 				priorNumBlueCalls: blue.__spy.calls.length,
-				priorNumRedCalls: magenta.__spy.calls.length
+				priorNumRedCalls: magenta.__spy.calls.length,
 			});
 			return originalLog.apply(console, arguments);
-		}
+		};
 		console.log.calls = [];
 	});
 
-	function getLoggedDoneCalls () {
+	function getLoggedDoneCalls() {
 		return console.log.calls.filter(function (call) {
 			return call.args.some(function (arg) {
 				return /done/.test(arg);
@@ -61,8 +61,7 @@ describe('exercise two (involving poem two)', function () {
 	}
 
 	describe('problemA', function () {
-
-		xit('ignoring errors, logs the first and second stanza in any order, and a done message when both are complete', function (done) {
+		it('ignoring errors, logs the first and second stanza in any order, and a done message when both are complete', function (done) {
 			exercise.problemA();
 			setTimeout(function () {
 				expect(blue).to.have.been.called.with(stanzas[0]);
@@ -74,12 +73,10 @@ describe('exercise two (involving poem two)', function () {
 				done();
 			}, 500);
 		});
-
 	});
 
 	describe('problemB', function () {
-
-		xit('ignoring errors, logs all stanzas in any order, and a done message when all are complete', function (done) {
+		it('ignoring errors, logs all stanzas in any order, and a done message when all are complete', function (done) {
 			this.timeout(3000);
 			exercise.problemB();
 			setTimeout(function () {
@@ -93,12 +90,10 @@ describe('exercise two (involving poem two)', function () {
 				done();
 			}, 2000);
 		});
-
 	});
 
 	describe('problemC', function () {
-
-		xit('ignoring errors, logs all stanzas in the correct order, and a done message when all are complete', function (done) {
+		it('ignoring errors, logs all stanzas in the correct order, and a done message when all are complete', function (done) {
 			this.timeout(3000);
 			exercise.problemC();
 			setTimeout(function () {
@@ -113,12 +108,10 @@ describe('exercise two (involving poem two)', function () {
 				done();
 			}, 2000);
 		});
-
 	});
 
 	describe('problemD', function () {
-
-		xit('logs all stanzas in the correct order; if an error occurs does not read the next file and instead logs the error; always logs done at the end', function (done) {
+		it('logs all stanzas in the correct order; if an error occurs does not read the next file and instead logs the error; always logs done at the end', function (done) {
 			this.timeout(3000);
 			exercise.problemD();
 			setTimeout(function () {
@@ -140,7 +133,5 @@ describe('exercise two (involving poem two)', function () {
 				done();
 			}, 2000);
 		});
-
 	});
-
 });
